@@ -1,0 +1,685 @@
+\documentclass[12pt,a4paper,titlepage,final]{article}
+
+% cestina a fonty
+\usepackage[czech]{babel}
+\usepackage[latin2]{inputenc}
+% balicky pro odkazy
+\usepackage[bookmarksopen,colorlinks,plainpages=false,urlcolor=blue,unicode]{hyperref}
+
+\usepackage{url}
+% obrazky
+\usepackage[dvipdf]{graphicx}
+% velikost stranky
+\usepackage[top=3.5cm, left=2.5cm, text={17cm, 24cm}, ignorefoot]{geometry}
+
+\usepackage{multirow}
+\usepackage{colortab,pstricks,color}
+\usepackage{float}
+\restylefloat{table,figure}
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% titulní strana
+
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+\def\authorA{Radim Kubi¹, \url{xkubis03@stud.fit.vutbr.cz}}
+\def\authorB{Radomír Urbánek, \url{xurban41@stud.fit.vutbr.cz}}
+\def\projname{Logistická firma}
+% !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+\input{title.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% obsah
+\pagestyle{plain}
+\pagenumbering{roman}
+\setcounter{page}{1}
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% textova zprava
+\newpage
+\pagestyle{plain}
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Úvod} \label{uvod}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ 
+Úkolem této práce je sestavení simulaèního modelu\footnote{Pøedná¹kové slajdy
+do pøedmìtu IMS, str. 46} systému\footnote{Pøedná¹kové slajdy
+do pøedmìtu IMS, str. 7} logistické firmy. Na tomto modelu\footnote{Pøedná¹kové slajdy
+do pøedmìtu IMS, str. 7}, na základì
+simulací\footnote{Pøedná¹kové slajdy
+do pøedmìtu IMS, str. 8}, bude ukázáno, kolik zdrojù firma potøebuje pro splnìní
+po¾adovaných kritérií.
+
+Cílem experimentù\footnote{Pøedná¹kové slajdy
+do pøedmìtu IMS, str. 8} bude zjistit, jaké zdroje bude muset firma vynalo¾it, aby
+dokázala splòovat po¾adovaná kritéria i pøi navý¹ení poptávky na pøepravu balíkù
+bìhem období pøed Vánocemi.
+
+Zdroji firmy je my¹leno:
+\begin{itemize}
+\setlength{\itemindent}{2em}
+\itemsep0em
+\item poèet aut a jejich kapacita
+\item poèet nakládacích ramp na poboèkách a centrále
+\item poèet pøepá¾ek na poboèkách.
+\end{itemize}
+
+Po¾adovaná kritéria byla stanovena takto:
+
+\begin{itemize}
+\setlength{\itemindent}{2em}
+\itemsep0em
+\item balík musí být doruèen do jednoho dne (24 h)
+\item optimální vytí¾enost aut (kolem 65\%)
+\item minimální prostoje aut pøi èekání na rampu
+\item pøijatelné fronty u pøepá¾ek na poboèkách (do 10 lidí v jedné frontì).
+\end{itemize}
+
+\subsection{Zdroje faktù}
+Pøi získávání faktù jsme èerpali pøevá¾nì z veøejnì dostupných zdrojù, ale i z
+osobní zku¹enosti práce na depu logistické firmy pùsobící na území ÈR. Informace
+jsme získali napøíklad ze zveøejnìných dat Èeského statistického úøadu,
+Èeské po¹ty, s.p. nebo Èeského telekomunikaèního úøadu. Pøi zji¹»ování
+vzdáleností mezi mìsty jsme vyu¾ili slu¾eb serveru Mapy.cz.
+
+\begin{enumerate}
+\item \label{csu} Èeský statistický úøad, \url{http://www.czso.cz/}
+\item \label{cpost} Èeská po¹ta, s.p., \url{http://www.ceskaposta.cz/}
+\item \label{ctu} Èeský telekomunikaèní úøad, \url{http://www.ctu.cz/}
+\item \label{ctk} Èeská tisková kanceláø, \url{http://www.ctk.cz/}
+\item \label{mapy} Server Mapy.cz, \url{http://www.mapy.cz/}, 7. 12. 2012
+\item \label{cal} Plánovací kalendáø pro rok 2011
+\end{enumerate}
+
+\subsection{Validita modelu}
+Pøi vytváøení modelu jsme èerpali informace z primárních zdrojù, tiskových
+a výroèních zpráv, vìstníkù apod. Model se chová oèekávaným zpùsobem podle
+zji¹tìných skuteèností, které jsou zadány jako parametry simulace,
+a výsledky odpovídají reálnému jednání firem.
+
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Rozbor tématu a pou¾itých metod/technologií} \label{rozbor}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Modelovaná\footnote{Pøedná¹kové slajdy
+do pøedmìtu IMS, str. 8} firma se skládá z pìti poboèek (Plzeò, Liberec, Ústí nad Labem,
+Hradec Králové a Brno) a jedné pøekládací centrály v Praze. Auta jezdí pouze
+mezi poboèkami a centrálou. Balíky na poboèku chodí pouze v otevíracích
+hodinách od 7 do 19 hodin. 
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{img/topologie.eps}
+\caption{Topologie dopravy}
+\end{figure}
+
+V následujících tabulkách jsou uvedeny údaje o poètu obyvatel v jednotlivých
+mìstech a o vzdálenostech mezi mìsty a centrálou.
+\\
+\begin{table}[H]
+\catcode`\-=12
+\centering
+\begin{tabular}{|l| r r r r r@{ }l |}
+\hline
+\multicolumn{1}{|c|}{\bf Mìsto} & \multicolumn{6}{|c|}{\bf Poèet obyvatel k 31. 12. 2011} \\
+\hline
+Ústí nad Labem & & & & & 94 & 251 \\
+\hline
+Liberec & & & & & 102 & 005 \\
+\hline
+Hradec Králové & & & & & 93 & 490 \\
+\hline
+Brno & & & & & 378 & 965 \\
+\hline
+Plzeò & & & & & 167 & 302 \\
+\hline
+Celkem & & & & & 836 & 013  \\
+\hline
+\end{tabular}
+\caption{Poèet obyvatel v mìstech poboèek [\ref{csu}]}
+\label{obyvatelstvo}
+\end{table}
+\newpage
+
+\begin{table}[H]
+\catcode`\-=12
+\centering
+\begin{tabular}{|l||rr l|c|c|}
+\hline
+\multicolumn{1}{|c||}{\multirow{2}{*}{\bf Poboèka}} & \multicolumn{5}{c|}{\bf Vzdálenost poboèky od centrály v Praze} \\
+\cline{2-6}
+ & \multicolumn{3}{|c|}{\bf Kilometry} & {\bf Èas minimální (zdroj)} & {\bf Èas maximální (koeficient 1,75)} \\
+\hline
+Ústí nad Labem & & 87 & & 1 h 04 min. & 1 h 52 min. \\
+\hline
+Liberec & & 110 & & 1 h 13 min. & 2 h 08 min. \\
+\hline
+Hradec Králové & & 118 & & 1 h 23 min. & 2 h 25 min. \\
+\hline
+Brno & & 206 & & 1 h 59 min. & 3 h 28 min. \\
+\hline
+Plzeò & & 91 & & 1 h 06 min. & 1 h 56 min. \\
+\hline
+\end{tabular}
+\caption{Vzdálenost poboèek od centrály [\ref{mapy}]}
+\label{jizdy}
+\end{table}
+
+Dal¹í tabulka zobrazuje pravdìpodobnosti vygenerování balíku z výchozí
+na cílovou poboèku. Pravdìpodobnosti pro ka¾dou poboèku byly vypoèteny podílem
+poètu obyvatel mìsta cílové poboèky a souètu poètu obyvatel v¹ech ostatních
+poboèek (kromì výchozí).
+
+\begin{table}[H]
+\catcode`\-=12
+\centering
+\begin{tabular}{|l||c|c|c|c|c|}
+\hline
+\multicolumn{1}{|c||}{\multirow{2}{*}{\bf Výchozí poboèka}} & \multicolumn{5}{c|}{\bf Cílová poboèka} \\
+\cline{2-6}
+ & Ústí nad Labem & Liberec & Hradec Králové & Brno & Plzeò \\
+\hline
+\LCC
+ & \black & & & & \\
+Ústí nad Labem & & 0,138 & 0,126 & 0,510 & 0,226 \\
+\ECC
+\hline
+\LCC
+ & & \black & & & \\
+Liberec & 0,129 & & 0,127 & 0,516 & 0,228 \\
+\ECC
+\hline
+\LCC
+ & & & \black & & \\
+Hradec Králové & 0,127 & 0,137 & & 0,510 & 0,226 \\
+\ECC
+\hline
+\LCC
+ & & & & \black & \\
+Brno & 0,206 & 0,223 & 0,205 & & 0,366 \\
+\ECC
+\hline
+\LCC
+ & & & & & \black \\
+Plzeò & 0,141 & 0,153 & 0,140 & 0,566 & \\
+\ECC
+\hline
+\end{tabular}
+\caption{Pravdìpodobnost vygenerování balíku z poboèky na poboèku}
+\label{pravdepodobnost}
+\end{table}
+
+Intervaly mezi pøíchody balíkù byly vypoèteny z poètu obyvatel v daném mìstì
+a údajù o poètu pøepravených balíkù Èeské po¹ty, s.p. uveøejnìné Èeským
+telekomunikaèním úøadem.
+
+\begin{tabbing}
+Støední stav obyvatelstva v roce 2011: \hspace{1em} 10 496 672 obyvatel [\ref{csu}]
+\\
+\\
+Poèet pøepravených balíkù Èeskou po¹tou, s.p. v roce 2011: \hspace{1em} 8 381 tisíc [\ref{cpost}][\ref{ctu}]
+\\
+\\
+Poèet pracovních dnù v ÈR roku 2011: \hspace{1em} 253 dnù [\ref{cal}]
+\\
+\\
+Prùmìrný poèet pøepravených balíkù na jednoho obyvatele ÈR: \hspace{1em} 0,8 balíku/rok
+\end{tabbing}
+
+\begin{table}[H]
+\catcode`\-=12
+\centering
+\begin{tabular}{|l| r r r l | r r r r l |c|}
+\hline
+{\bf Poboèka} & \multicolumn{4}{|c|}{\bf Poèet balíkù za rok} & \multicolumn{5}{|c|}{\bf Poèet balíkù za den} & {\bf Poèet balíkù za hodinu} \\
+\hline
+Ústí nad Labem & & & 75 401 & & & & & 298 & & 24,83 \\
+\hline
+Liberec & & & 81 604 & & & & & 323 & & 26,92 \\
+\hline
+Hradec Králové & & & 74 792 & & & & & 296 & & 24,67 \\
+\hline
+Brno & & & 303 172 & & & & & 1198 & & 99,83 \\
+\hline
+Plzeò & & & 133 842 & & & & & 529 & & 44,08 \\
+\hline
+\end{tabular}
+\caption{Poèty pøíchozích balíkù na jednotlivé poboèky za jednotky èasu}
+\label{baliky1}
+\end{table}
+
+Za pøedpokladu pracovní doby 12 hodin dennì.
+
+Po¹ta roènì doruèí miliony balíkù, pøed Vánocemi jejich poèet v posledních
+letech rostl o 20 a¾ 35 procent. [\ref{ctk}]
+
+\begin{table}[H]
+\catcode`\-=12
+\centering
+\begin{tabular}{|l||c| c c r@{,}l |}
+\hline
+\multicolumn{1}{|c||}{\multirow{2}{*}{\bf Mìsto}} & \multicolumn{5}{|c|}{\bf Poèet balíkù za hodinu} \\
+\cline{2-6}
+ & {\bf Bì¾nì} & \multicolumn{4}{|c|}{\bf Pøed Vánocemi} \\
+\hline
+Ústí nad Labem & 24,83 & & & 33 & 52 \\
+\hline
+Liberec & 26,92 & & & 36 & 34 \\
+\hline
+Hradec Králové & 24,67 & & & 33 & 30 \\
+\hline
+Brno & 99,83 & & & 134 & 77 \\
+\hline
+Plzeò & 44,08 & & & 59 & 51 \\
+\hline
+\end{tabular}
+\caption{Zvý¹ení poètu pøíchozích balíkù pøed Vánocemi}
+\label{baliky2}
+\end{table}
+
+%% sem pak nìco dopsat o pou¾itých technologiích.
+
+
+%Shrnutí v¹ech podstatných faktù, které se týkají zkoumaného systému (co mo¾ná
+%nejvìcnìj¹ím a technickým (ideálnì formálnì matematickým) pøístupem, ¾ádné
+%literární pøíbìhy). Podstatná fakta o systému musí být zdùvodnìna a podepøena
+%dùvìryhodným zdrojem (vìdecký èlánek, kniha, osobní mìøení a zji¹»ování).
+%Pokud budete tvrdit, ¾e ovce na pastvì se¾ere dvì kila trávy za den, musí
+%existovat jiný (dùvìryhodný) zdroj, který to potvrdí. Toto shrnutí urèuje
+%míru dùvìryhodnosti va¹eho modelu (nikdo nechce výsledky z nedùvìryhodného
+%modelu). Pokud nebudou uvedeny zdroje faktù o va¹em systému, hrozí ztráta bodù.
+%
+
+
+%=============================================================================
+\subsection{Postupy pøi vytváøení modelu}
+
+Pøi vytváøení modelu bylo vyu¾ito knihovny SIMLIB/C++, co¾ je objektovì
+orientovaná knihovna pro jazyk C++. Patøí mezi základní nástroje pro simulaci.
+
+%Popis pou¾itých postupù pro vytvoøení modelu a zdùvodnìní, proè jsou pro zadaný
+%problém vhodné. Zdùvodnìní mù¾e být podpoøeno ukázáním alternativního pøístupu
+%a srovnáním s tím va¹ím. Ètenáø musí mít jistotu, ¾e zvolené nástroje/postupy/
+%technologie jsou ideální pro øe¹ení zadaného problému (ov¹em, "dìlám to v Javì,
+%proto¾e momentálnì Java frèí..." nemusí zadavatele studie uspokojit). 
+%
+%=============================================================================
+\subsection{Pùvod pou¾itých technologií}
+Ve¹keré technologie pou¾ité v tomto projektu byly získány z pøedmìtu Modelování
+a simulace, z dokumentace a pøíkladù knihovny SIMLIB/C++.
+\\
+\url{https://www.fit.vutbr.cz/study/courses/IMS/public/}
+\\
+
+%Popis pùvodu pou¾itých metod/technologií (odkud byly získány (odkazy), zda-li
+%jsou vytvoøeny autorem) - pøevzaté èásti dokumentovat (specificky, pokud k nim
+%pøíslu¹í nìjaké autorské oprávnìní/licence). Zdùvodnit potøebu vytvoøení
+%vlastních metod/nástrojù/algoritmù. Ve vìt¹inì pøípadù budete pøebírat ji¾
+%navr¾ené metody/algoritmy/definice/nástroje a je to pro ¹kolní projekt typické.
+%Stejnì tak je typické, ¾e studenti chybnì vymý¹lí ji¾ hotové vìci a dojdou
+%k naprostému nesmyslu - je tøeba toto nebezpeèí eleminovat v tomto zdùvodnìní. 
+%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section{Koncepce} \label{koncepce}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+V experimentech sledujeme a sna¾íme se zjistit optimální poèty vý¹e uvedených
+zdrojù, zanedbáváme pøitom nìkteré skuteènosti, které nejsou pøedmìtem zkoumání,
+napø.:
+
+\begin{itemize}
+\item tankování aut na èerpacích stanicích - natankovat lze bìhem jízdy mezi
+poboèkou a centrálou, intervaly jízd mají na tuto èinnost rezervy
+\item povinné pøestávky øidièù aut - øidiè si mù¾e udìlat pøestávku bìhem jízdy
+mezi poboèkou a centrálou nebo bìhem vykládání/nakládání aut
+\item støídání øidièù aut - øidièi se mù¾ou vystøídat na poboèce/centrále bìhem
+nakládání/vykládání aut
+\item poèet pracovníkù, kteøí vykládají/nakládají balíky do aut - pøedpokládejme,
+¾e u ka¾dé rampy je jeden pracovník
+\item povìtrnostní podmínky a jiné komplikace na trasách - intervaly jízd mají
+rezervu
+\end{itemize}
+
+\subsection{Proces pøíchodu balíkù na poboèku}
+Nové balíky pøicházející na poboèku jsou generovány v intervalech daných
+exponenciálním rozlo¾ením\footnote{Pøedná¹kové slajdy
+do pøedmìtu IMS, str. 94} pravdìpodobnosti, støed tohoto rozlo¾ení je vypoèítán
+z hodnot v tabulkách \ref{baliky1} a \ref{baliky2}.
+
+\subsection{Proces balíku}
+Novì vzniklému procesu\footnote{Pøedná¹kové slajdy
+do pøedmìtu IMS, str. 124} balíku je pøidìlena cílová poboèka podle pravdìpodobnosti
+v tabulce \ref{pravdepodobnost} a je zaznamenán èas jeho vzniku. Balík se po
+pøidìlení cílové poboèky pokusí obsadit pøepá¾ku zdrojové poboèky, pokud není
+¾ádná pøepá¾ka volná, postaví se do spoleèné fronty ke v¹em pøepá¾kám poboèky
+a èeká na uvolnìní nìkteré z nich.
+
+Kdy¾ se balíku podaøí obsadit pøepá¾ku, je u této pøepá¾ky vá¾en po dobu, která
+se øídí rovnomìrným rozlo¾ením\footnote{Pøedná¹kové slajdy
+do pøedmìtu IMS, str. 92} v intervalu 10-15 sekund, po zvá¾ení je
+oznaèen èárovým kódem a zadáván do systému, které trvá rovnomìrnì 40-60 sekund.
+Jakmile je bálik v systému, uvolní pøepá¾ku a je po pásu pøemis»ován do skladu
+na poboèce za dobu 20 sekund, kde je ulo¾en a èeká na pøevoz do centrály.
+
+Na centrále je balík vylo¾en na pás, kde probìhne jeho oskenování
+ve skenovacím rámu po dobu 8-12 sekund, a podle naskenované cílové poboèky
+je za dobu 20s ulo¾en do skladu na centrále urèeném pro konkrétní cílovou
+poboèku. Zde èeká na nalo¾ení a pøevoz do cílové poboèky.
+
+A¾ je balík na cílové poboèce, zaznamená se èas jeho celkové doby strávené
+v systému od jeho vzniku po doruèení na cílovou poboèku. V tomto okam¾iku
+balík opou¹tí systém a jeho dal¹í chování nezkoumáme.
+
+\subsection{Proces auta}
+Auto pøijí¾dí z pøekládací centrály na regionální poboèku za dobu, která
+se øídí rovnomìrným rozlo¾ením podle tabulky \ref{jizdy}, kde se sna¾í obsadit obslu¾nou
+rampu. Kdy¾ není ¾ádná rampa volná, postaví se do spoleèné fronty ke v¹em rampám
+a èeká, a¾ se nìkterá z ramp uvolní.
+
+A¾ se podaøí autu obsadit obslu¾nou rampu, jsou z nìj po jednom vylo¾eny
+v¹echny balíky, pokud nìjaké vezlo. Ka¾dý balík je vykládán po dobu
+rovnomìrnì 12-20 sekund.
+
+Po úplném vylo¾ení auta jsou do nìj nakládány balíky do jeho maximální kapacity,
+také po jednom. Ka¾dý balík se nakládá po dobu rovnomìrnì 15-25 sekund. Poté
+auto uvolòuje rampu a vydá se na cestu k pøekládací centrále. Pokud se pro
+nedostatek balíkù ve skladu nepodaøí auto nalo¾it do jeho maximální kapacity,
+neèeká na dal¹í nové balíky a opou¹tí poboèku nalo¾ené tak, jak je.
+Doba jízdy na centrálu se øídí rovnomìrným rozlo¾ením v intervalu podle tabulky
+\ref{jizdy}.
+
+Pøi pøíjezdu na centrálu auto obsazuje obslu¾nou rampu centrály, pokud není
+¾ádná z ramp volná, postaví se do spoleèné fronty ke v¹em rampám a èeká na
+uvolnìní nìkteré z nich.
+
+Kdy¾ se podaøí obsadit rampu, jsou z auta po jednom postupnì vykládány v¹echny
+balíky, které vezlo. Jeden balík je vykládán po dobu 12-20 sekund rovnomìrnì.
+
+Jakmile je auto prázdné, je nakládáno balíky urèené do jeho obsluhované poboèky.
+Balíky se nakládají po jednom po dobu 15-25 sekund rovnomìrnì. Nakládání probíhá,
+dokud není auto plnì nalo¾eno. V situaci, ¾e není auto plnì nalo¾ené a zároveò
+není co nalo¾it, neèeká se na dal¹í balíky pro naplnìní maximální kapacity.
+Po ukonèení nakládání auto uvolòuje obslu¾nou rampu a odjí¾dí do poboèky, kterou
+obsluhuje.
+
+Tento proces se stále opakuje.
+
+%Popi¹te abstraktnì architekturu va¹eho programu, princip jeho èinnosti,
+%významné datové struktury a podobnì. Smyslem této kapitoly je podat informaci
+%o programu bez pou¾ití názvù tøíd, funkcí a podobnì. Tuto kapitolu by mìl
+%pochopit ka¾dý technik i bez informatického vzdìlání. Vyjadøovacími prostøedky
+%jsou vývojové diagramy, schémata, vzorce, algoritmy v pseudokódu a podobnì.
+%Musí zde být vysvìtlena nosná my¹lenka va¹eho pøístupu.
+%
+%=============================================================================
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section{Architektura simulaèního modelu/simulátoru} \label{architektura}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Simulaèní model je vytvoøený jako jednoduchá konzolová aplikace bez vstupních
+parametrù. Vstupní parametry se zadávají pøed pøekladem v podobì konstant pøímo
+do zdrojového kódu.
+
+Pøíkazem {\tt make} se program pøelo¾í, pøíkazem {\tt make run} je spu¹tìn.
+Výsledkem je soubor, který obsahuje výstupní data experimentu.
+
+%Tato kapitola má rùznou dùle¾itost pro rùzné typy zadání. U implementaèních
+%témat lze tady oèekávat jádro dokumentace. Zde mù¾ete vyu¾ít zajímavého prvku
+%ve va¹em simulaèním modelu a tady ho "prodat".
+%
+%=============================================================================
+\subsection{Reprezentace objektù}
+Pøíchod balíkù na poboèky je generován procesem generátoru. Poboèky a centrála jsou
+v simulaèním modelu reprezentovány frontami\footnote{Pøedná¹kové slajdy
+do pøedmìtu IMS, str. 141} typu
+FIFO\footnote{Z anglického First In, First Out - první dovnitø, první ven}.
+Auta a balíky pøedstavují procesy, pøepá¾ky na poboèkách a rampy jsou
+reprezentovány skladem\footnote{Pøedná¹kové slajdy
+do pøedmìtu IMS, str. 149}.
+Nákladový prostor ka¾dého z aut odpovídá frontì, se kterou se pracuje jako
+se zásobníkem LIFO\footnote{Z anglického Last In, First Out -
+poslední dovnitø, první ven}.
+
+%Minimálnì je nutno ukázat mapování abstraktního (koncept.) modelu do
+%simulaèního (resp. simulátoru). Napø. které tøídy odpovídají kterým
+%procesùm/velièinám a podobnì. 
+%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section{Podstata simulaèních experimentù a jejich prùbìh} \label{simulace}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Cílem experimentù je zefektivnìní doruèování balíkù v logistické firmì
+a zji¹tìní, jaké zdroje je tøeba navý¹it, kdy¾ se zvý¹í poèet doruèovaných
+balíkù pøed Vánocemi.
+
+
+
+%Nezamìòujte pojmy testování a experimentování (dùvod pro bodovou ztrátu)!!!%
+%Zopakovat/shrnout co pøesnì chcete zjistit experimentováním a proè k tomu
+%potøebujete model. Pokud experimentování nemá cíl, je celý projekt ¹patnì. Je
+%celkem pøípustné u experimentu odhalit chybu v modelu, kterou na základì
+%experimentu opravíte. Pokud se v nìkterém experimentu nechová model podle
+%oèekávání, je nutné tento experiment dùkladnì provìøit a chování modelu
+%zdùvodnit (je to souèást simulaènické profese). Pokud model pro nìkteré vstupy
+%nemá dùvìryhodné výsledky, je nutné to zdokumentovat. Pochopitelnì model musí
+%mít dùvìryhodné výsledky pro vìt¹inu myslitelných vstupù.
+%
+
+\subsection{Postup experimentování}
+Simulace bude probíhat následujícím zpùsobem. Nejdøíve bude nastaven nejmen¹í
+poèet zdrojù, se kterým firme disponuje. Tedy jedním autem na
+ka¾dé trase, jednou rampou na ka¾dé poboèce i centrále a jedinou pøepá¾kou na
+poboèkách. Zdroje budou postupnì navy¹ovány, dokud nedojde ke splnìní zadaných
+kritérií. Dal¹ím krokem bude odstranìní pøebyteèných zdrojù. Obdobný pøístup
+buede aplikován i pøi experimentování v období Vánoc.
+
+
+%Naznaèit postup experimentování – jakým zpùsobem hodláte prostøednictvím
+%experimentù dojít ke svému cíli (v nìkterých situacích je pøípustné "to
+%zkou¹et tak dlouho a¾ to vyjde", ale i ty musí mít nìjaký organizovaný postup). 
+%
+
+%=============================================================================
+\subsection{Experimentování}
+
+%Dokumentace jednotlivých experimentù - souhrn vstupních podmínek a podmínek
+%bìhu simulace, komentovaný výpis výsledkù, závìr experimentu a plán pro dal¹í
+%experiment (napø. v experimentu 341. jsem nastavil vstup x na hodnotu X, která
+%je typická pro ... a vstup y na Y, proto¾e chci zjistit chování systému
+%v prostøedi ... Po skonèení bìhu simulace byly získány tyto výsledky ...,
+%kde je nejzajímavìj¹í hodnota sledovaných velièin a,b,c které se chovaly podle
+%pøedpokladu a velièin d,e,f které ne. Lze z toho usoudit, ¾e v modelu není
+%správnì implementováno chování v podmínkách ... a proto v následujících
+%experimentech budu vycházet z modifikovaného modelu verze ... Nebo výsledky
+%ukazují, ¾e systém v tìchto podmínkách vykazuje znaènou citlivost na parametr
+%x ... a proto bude dobré v dal¹ích experimentech pøesnì provìøit chování systému
+%na parametr x v intervalu hodnot ... a¾ ...) 
+%
+Nejprve jsme se zamìøili na poèty poøpá¾ek na poboèkách. Situlace tam nebyla
+pøíli¹ slo¾itá. Pøi poètu dvou pøepá¾ek na ka¾dé poboèce byla splnìna kritéria
+na ètyøech poboèkách. Jen v Brnì se tvoøily pøíli¹ dlouhé fronty. To se vyøe¹ilo
+pøidáním dal¹ích dvou pøepá¾ek.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.75]{img/bezny.eps}
+\caption{Bì¾ný provoz}
+\end{figure}
+
+Dal¹í experimenty byly provádìny za minimálních poètu zdrojù aut a ramp. Tento
+stav se samozøejmì ukázal být jako nevyhovující. Balíky se hromadily ve skladech
+poboèek i na centrále. Tento problém byl øe¹en pøidáním jednoho auta na ka¾dou
+linku. Problém v¹ak nebyl vyøe¹en zcela. Pøidáním dal¹ích aut nevedlo na vìt¹inì
+linek k úspìchu. Jeliko¾ vykládání a nakládání balíkù trvá pøili¹ dlouhou dobu,
+na poboèkách se tvoøili fronty aut a jejich prostoje byli pøíli¹ dlouhé. To
+vedlo k pøidání druhé rampy ke ka¾dé poboèce i centrále. Tím byl vyøe¹en problém
+s hromadícími se balíky u poboèek v Ústí Nad Labem, Liberci i Hradci Králové.
+Dále bylo postupováno obdobným zpùsobem. Navý¹ení poètu aut i ramp vedlo k
+uspokojivému splnìní doby rozvozu.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.75]{img/malo_vytizene.eps}
+\caption{Málo vytí¾ené}
+\end{figure}
+
+Dal¹ím nedostatkem v¹ak byla prùmìrná vytí¾enost jednotlivých aut. Ta, jak je
+ukázáno v grafu nepøekraèovala 50\%. Jak se ukázalo, byl poèet aut na
+jednotlivých linkách pøíli¹ velký (viz. tabulka \ref{prehnany}). Proto bylo
+nìkteré zdroje nutné redukovat. Provedly se tedy experimenty z men¹ím poètem
+aut, které nakonec vedly k úspìchu.
+
+\begin{table}
+\catcode`\-=12
+\centering
+\begin{tabular}{|c||c|c|}
+\hline
+\multicolumn{1}{|c||}{\multirow{2}{*}{\bf Poboèka}} & \multicolumn{2}{c|}{\bf Pøíli¹ velký poèet aut} \\
+\cline{2-3}
+ & {\bf Bì¾ný provoz} & {\bf Pøed Vánocemi} \\
+\hline
+Ústí nad Labem & 5 & 5 \\
+\hline
+Liberec & 5 & 5 \\
+\hline
+Hradec Králové & 5 & 5 \\
+\hline
+Brno & 10 & 15 \\
+\hline
+Plzeò & 5 & 6 \\
+\hline
+\end{tabular}
+\caption{Pøíli¹ velký poèet aut pro poboèky}
+\label{prehnany}
+\end{table}
+
+V období Vánoc v¹ak kritéria splnìna nebyla. Opìt byl problém s pøíli¹ dlouhým
+rozvozem balíkù.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.75]{img/bez_navyseni.eps}
+\caption{Provoz pøed Vánocemi bez navý¹ení poètu aut}
+\end{figure}
+
+V experimentech, které to mìli vyøe¹it byl opìt postupnì zvy¹ován stav aut na
+v¹ech poboèkách. Tímto zpùsobem se dospìlo do uspokojívého stavu. Dal¹í zdroje
+splòovaly zadaná kritéria, proto je nebylo tøeba nijak upravovat. 
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.75]{img/vanoce.eps}
+\caption{Vánoce - OLE!}
+\end{figure}
+
+%=============================================================================
+\subsection{Závìr experimetování}
+Pomocí experimentù se podaøilo zjistit mno¾ství zdrojù, odpovícajích zadaným
+kritériím. Dále bylo zji¹tìno, kolik by firma musela navý¹it zdroje pøi navý¹ení
+poètu pøíchozích balíkù na 35\% jak je vidìt na tabulce \ref{optimalni}.
+Prùmìrná vytí¾enost aut je vynesena v grafu.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.75]{img/vytizenost.eps}
+\caption{Vytí¾enost}
+\end{figure}
+
+\begin{table}[H]
+\catcode`\-=12
+\centering
+\begin{tabular}{|l||c|c|}
+\hline
+\multicolumn{1}{|c||}{\multirow{2}{*}{\bf Poboèka}} & \multicolumn{2}{c|}{\bf Optimální poèet aut} \\
+\cline{2-3}
+ & {\bf Bì¾ný provoz} & {\bf Pøed Vánocemi} \\
+\hline
+Ústí nad Labem & 2 & 3 \\
+\hline
+Liberec & 2 & 3 \\
+\hline
+Hradec Králové & 2 & 3 \\
+\hline
+Brno & 8 & 11 \\
+\hline
+Plzeò & 3 & 4 \\
+\hline
+\end{tabular}
+\caption{Optimální poèet aut pro poboèky}
+\label{optimalni}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.75]{img/podil.eps}
+\caption{Podíl doruèených a nedoruèených}
+\end{figure}
+
+Bylo splnìno i kritérium na prùmìrný rozvoz balíku do 24 hodin. Jak je ukázáno na grafu, byla do dané doby rozvezeno více ne¾ 80\% balíkù.
+\\
+V období Vánoc pro splnìní kritérií bude muset firma navý¹ít své zdroje o 7 aut.
+Dbalo pouze na splnìní kritérií a né na efektivnost provozu, je tedy mo¾né, ¾e by dal¹í experimenty vedly k zefektivnìní firmy. Jeliko¾ dává simulaèní mmodel pova¾ovaný výsledek, není nutné pøemý¹let nad jinou topologií dopravy, a ukázalo se jako vhodné rozèlenit dopravu na jednotlivé linky.  
+
+%Závìry experimentù – bylo provedeno N experimentù v tìchto situacích ...
+%V prùbìhu experimentování byla odstranìna ... chyba v modelu. Z experimentù
+%lze odvodit chování systémù s dostateènou vìrohodností a experimentální
+%provìøování tìchto ... situací ji¾ napøinese dal¹í výsledky, nebo» ...
+%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section{Shrnutí simulaèních experimentù a závìr} \label{shrnuti}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+V rámci projektu byl sestaven simulaèní model logistické firmy. Na základì experimentù bylo stanoveno mno¾ství zdrojù potøebného pro doruèování balíkù tak aby byla dodr¾ována zadaná kritéria.
+Potøebné mno¾ství zdrojù je uvedeno v následující tabulce.
+
+% sem dát tabulku aut, ramp... mimo období vánoc
+
+Dále byly experimenty zji¹tìno, kolik by firma musela vynalo¾it dal¹ích zdrojù v pøípadì, ¾e se poèet zásilek bìhem Výnoc zvý¹í o 35\%, a to tak, aby stále splòovala zadaná kritéria.
+Mno¾ství zdrojù na to potøebných a rozdíl o proti stavu mimo vánoce je uveden v tabulce.
+
+% sem dát tabulku aut, ramp... v období vánoc a rozdíl o proti pøedchozímu stavu  
+
+%Závìrem dokumentace se rozumí zhodnocení simulaèní studie a zhodnocení
+%experimentù (napø. Z výsledkù experimentù vyplývá, ¾e ... pøi pøedpokladu,
+%¾e ... Validita modelu byla ovìøena ... V rámci projektu vznikl nástroj ...,
+%který vychází z ... a byl implementován v ...).
+
+%    Do závìru se nehodí psát poznámky osobního charakteru (napø. práce na
+%projektu mì bavila/nebavila, ...). Technická zpráva není osobní pøíbìh autora.
+%absolutnì nikoho nezajímá, kolik úsilí jste projektu vìnovali, dùle¾itá je
+%pouze kvalita zpracování simulátoru/modelu a obsa¾nost simulaèní studie
+%(rozhodnì ne napø.: projekt jsem dìlal ... hodin, co¾ je víc ne¾ zadání
+%pøedpokládalo. Program má ... øádkù kódu). Pokud zdùrazòujete, ¾e jste práci
+%dìlali významnì déle ne¾ se èekalo, pak tím pouze demonstrujete vlastní
+%neschopnost (to platí zejména v profesním ¾ivotì). do závìru se velmi nehodí
+%psát "auto-zhodnocení" kvality práce, to je výhradnì na
+%recenzentovi/hodnotiteli (napø. v projektu jsem zcela splnil zadání a domnívám
+%se, ¾e mùj model je bezchybný a výsledky takté¾). Statisticky èastý je pravý
+%opak autorova auto-zhodnocení. Pokud pøesto chcete vyzdvihnout kvalitu svého
+%díla (co¾ je dobøe), tak va¹e výroky musí být naprosto nepopiratelnì zdùvodnìny
+%a prokázány (napø. pomocí jiného referenèního pøístupu, matematického dùkazu,
+%analýzy, ...). 
+%
+
+
+
+%=============================================================================
+
+% pøílohy
+\appendix
+\end{document}
